@@ -6,10 +6,10 @@ import Participant from "../models/Participant";
 const addParticipant = async (req: Request, res: Response) => {
     const participant: Participant = req.body;
 
-    const validUser = await validateUser(participant.idUser);
-    const validEvent = await getEvent(participant.idEvento);
+    const user = await getUser(participant.idUser);
+    const event = await getEvent(participant.idEvento);
 
-    if (!validUser || !validEvent) {
+    if (!user || !event) {
         return res.send("participant not added");
     }
 
@@ -31,7 +31,7 @@ const addParticipant = async (req: Request, res: Response) => {
     return res.status(201).send("participant added");
 };
 
-async function validateUser(userId: string) {
+async function getUser(userId: string) {
     try {
         const response = await axios.get(
             `${process.env.URL_USER}/users/${userId}`
