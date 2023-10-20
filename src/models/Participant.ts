@@ -8,3 +8,5 @@ class Participant {
         this.idUser = idUser;
     }
 }
+
+export default Participant;

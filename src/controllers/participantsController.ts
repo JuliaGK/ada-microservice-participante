@@ -1,51 +1,84 @@
 import { Request, Response } from "express";
 import { db } from "../db/dbConfig";
 import axios from "axios";
+import Participant from "../models/Participant";
 
 const addParticipant = async (req: Request, res: Response) => {
-    type Participant = {
-        userId: string;
-        eventId: string;
-    };
     const participant: Participant = req.body;
 
-    const responseParticipant = await validateParticipant(participant.userId);
-    const responseEvent = await validateEvent(participant.eventId);
+    const validUser = await validateUser(participant.idUser);
+    const validEvent = await getEvent(participant.idEvento);
 
-    if (responseParticipant && responseEvent) {
-        const sql = `
-            INSERT INTO participants(idUser, idEvent) VALUES (${participant.userId}, ${participant.eventId});
-        `;
-        db.run(sql, (error: Error) => {
-            if (error) {
-                res.status(400);
-                res.end(error);
-            }
-            res.status(201);
-            res.send("participant added");
-        });
-    } else {
-        res.send("participant not added");
+    if (!validUser || !validEvent) {
+        return res.send("participant not added");
     }
+
+    if (!(await validateAvailableSeats(participant.idEvento))) {
+        return res.send("no seats available");
+    }
+
+    if (await isParticipantInEvent(participant)) {
+        return res.send("participant already registered");
+    }
+
+    const sql = `INSERT INTO participants(idUser, idEvent) VALUES (:idUser, :idEvent);`;
+
+    await db.run(sql, {
+        ":idUser": participant.idUser,
+        ":idEvent": participant.idEvento,
+    });
+
+    return res.status(201).send("participant added");
 };
 
-async function validateParticipant(userId: string) {
+async function validateUser(userId: string) {
     try {
-        await axios.get(`http://localhost:3001/users/${userId}`);
+        const response = await axios.get(
+            `${process.env.URL_USER}/users/${userId}`
+        );
+        return response;
     } catch (error) {
-        console.log(error);
-        return false;
+        return undefined;
     }
-    return true;
 }
 
-async function validateEvent(eventId: string) {
+async function getEvent(eventId: string) {
     try {
-        await axios.get(`http://localhost:3002/events/${eventId}`);
+        const response = await axios.get(
+            `${process.env.URL_EVENT}/events/${eventId}`
+        );
+        return response.data;
     } catch (error) {
-        return false;
+        return undefined;
     }
-    return true;
+}
+
+async function isParticipantInEvent(participant: Participant) {
+    const sql = `
+        SELECT * FROM participants WHERE idEvent= :idEvent AND idUser= :idUser
+    `;
+
+    const result = await db.get(sql, {
+        ":idEvent": participant.idEvento,
+        ":idUser": participant.idUser,
+    });
+
+    return result ? true : false;
+}
+
+async function validateAvailableSeats(eventId: string) {
+    try {
+        const event = await getEvent(eventId);
+        const seats = event.vagas;
+
+        const sql = `SELECT COUNT(*) as registered FROM participants WHERE idEvent = ?`;
+        const result = await db.get(sql, [eventId]);
+
+        return result.registered < seats;
+    } catch (error) {
+        console.log(error);
+        return undefined;
+    }
 }
 
 export default addParticipant;
