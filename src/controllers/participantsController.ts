@@ -54,16 +54,21 @@ async function getEvent(eventId: string) {
 }
 
 async function isParticipantInEvent(participant: Participant) {
-    const sql = `
+    try {
+        const sql = `
         SELECT * FROM participants WHERE idEvent= :idEvent AND idUser= :idUser
-    `;
+        `;
 
-    const result = await db.get(sql, {
-        ":idEvent": participant.idEvento,
-        ":idUser": participant.idUser,
-    });
+        const result = await db.get(sql, {
+            ":idEvent": participant.idEvento,
+            ":idUser": participant.idUser,
+        });
 
-    return result ? true : false;
+        return result ? true : false;
+    } catch (error) {
+        console.log(error);
+        return undefined;
+    }
 }
 
 async function validateAvailableSeats(eventId: string) {
