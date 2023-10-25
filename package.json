@@ -15,6 +15,7 @@
         "sqlite3": "^5.1.6"
     },
     "devDependencies": {
+        "@types/cors": "^2.8.15",
         "@types/express": "^4.17.19",
         "ts-node-dev": "^2.0.0",
         "typescript": "^5.2.2"

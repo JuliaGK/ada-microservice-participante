@@ -2,6 +2,7 @@ import express from "express";
 import dotenv from "dotenv";
 import { createDbConnection } from "./db/dbConfig";
 import participantsRouter from "./routes/participantsRoute";
+import cors from "cors";
 
 dotenv.config();
 
@@ -9,6 +10,22 @@ createDbConnection();
 
 const app = express();
 const port = process.env.PORT;
+
+const whitelist = ["http://localhost:4000"]; // assuming front-end application is running on localhost port 3000
+
+const corsOptions = {
+    origin: function (origin: any, callback: any) {
+        console.log(origin);
+
+        if (whitelist.indexOf(origin) !== -1) {
+            callback(null, true);
+        } else {
+            callback(new Error("Not allowed by CORS"));
+        }
+    },
+};
+
+app.use(cors(corsOptions));
 
 app.use(express.json());
 
