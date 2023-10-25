@@ -34,7 +34,7 @@ const addParticipant = async (req: Request, res: Response) => {
 async function getUser(userId: string) {
     try {
         const response = await axios.get(
-            `${process.env.URL_USER}/users/${userId}`
+            `${process.env.API_GATEWAY}/users/${userId}`
         );
         return response;
     } catch (error) {
@@ -45,7 +45,7 @@ async function getUser(userId: string) {
 async function getEvent(eventId: string) {
     try {
         const response = await axios.get(
-            `${process.env.URL_EVENT}/events/${eventId}`
+            `${process.env.API_GATEWAY}/events/${eventId}`
         );
         return response.data;
     } catch (error) {
