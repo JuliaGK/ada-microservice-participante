@@ -5,37 +5,39 @@ import { initializeDatabase } from "../db/dbConfig";
 
 const dbPromise = initializeDatabase();
 
-const addParticipant = async (req: Request, res: Response) => {
-    const participant: Participant = req.body;
+export const participantsController = {
+    addParticipant: async (req: Request, res: Response) => {
+        const participant: Participant = req.body;
 
-    const user = await getUser(participant.idUser);
-    const event = await getEvent(participant.idEvent);
+        const user = await getUser(participant.idUser);
+        const event = await getEvent(participant.idEvent);
 
-    if (!user || !event) {
-        return res.send("participant not added");
-    }
+        if (!user || !event) {
+            return res.send("participant not added");
+        }
 
-    if (!(await validateAvailableSeats(participant.idEvent))) {
-        return res.send("no seats available");
-    }
+        if (!(await validateAvailableSeats(participant.idEvent))) {
+            return res.send("no seats available");
+        }
 
-    if (await isParticipantInEvent(participant)) {
-        return res.send("participant already registered");
-    }
+        if (await isParticipantInEvent(participant)) {
+            return res.send("participant already registered");
+        }
 
-    const sql = `INSERT INTO participants(idUser, idEvent) VALUES (:idUser, :idEvent);`;
+        const sql = `INSERT INTO participants(idUser, idEvent) VALUES (:idUser, :idEvent);`;
 
-    const db = await dbPromise;
+        const db = await dbPromise;
 
-    await db.run(sql, {
-        ":idUser": participant.idUser,
-        ":idEvent": participant.idEvent,
-    });
+        await db.run(sql, {
+            ":idUser": participant.idUser,
+            ":idEvent": participant.idEvent,
+        });
 
-    return res.status(201).send("participant added");
+        return res.status(201).send("participant added");
+    },
 };
 
-async function getUser(userId: string) {
+export async function getUser(userId: string) {
     try {
         const response = await axios.get(
             `${process.env.API_GATEWAY}/users/${userId}`
@@ -46,7 +48,7 @@ async function getUser(userId: string) {
     }
 }
 
-async function getEvent(eventId: string) {
+export async function getEvent(eventId: string) {
     try {
         const response = await axios.get(
             `${process.env.API_GATEWAY}/events/${eventId}`
@@ -57,7 +59,7 @@ async function getEvent(eventId: string) {
     }
 }
 
-async function isParticipantInEvent(participant: Participant) {
+export async function isParticipantInEvent(participant: Participant) {
     try {
         const sql = `
         SELECT * FROM participants WHERE idEvent= :idEvent AND idUser= :idUser
@@ -77,7 +79,7 @@ async function isParticipantInEvent(participant: Participant) {
     }
 }
 
-async function validateAvailableSeats(eventId: string) {
+export async function validateAvailableSeats(eventId: string) {
     try {
         const event = await getEvent(eventId);
         const seats = event.vagas;
@@ -93,5 +95,3 @@ async function validateAvailableSeats(eventId: string) {
         return undefined;
     }
 }
-
-export default addParticipant;

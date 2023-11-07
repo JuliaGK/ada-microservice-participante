@@ -1,8 +1,11 @@
 import { Router } from "express";
-import addParticipant from "../controllers/participantsController";
+import { participantsController } from "../controllers/participantsController";
 
 const participantsRouter = Router();
 
-participantsRouter.post("/addParticipants", addParticipant);
+participantsRouter.post(
+    "/addParticipants",
+    participantsController.addParticipant
+);
 
 export default participantsRouter;
