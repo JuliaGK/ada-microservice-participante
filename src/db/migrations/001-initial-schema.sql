@@ -1,0 +1,5 @@
+CREATE TABLE IF NOT EXISTS participants (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    idUser INTEGER,
+    idEvent INTEGER
+);
