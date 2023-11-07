@@ -1,10 +1,10 @@
 class Participant {
     id?: string;
-    idEvento: string;
+    idEvent: string;
     idUser: string;
 
-    constructor(idEvento: string, idUser: string) {
-        this.idEvento = idEvento;
+    constructor(idEvent: string, idUser: string) {
+        this.idEvent = idEvent;
         this.idUser = idUser;
     }
 }

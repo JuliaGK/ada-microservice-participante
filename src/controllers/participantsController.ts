@@ -1,19 +1,21 @@
 import { Request, Response } from "express";
-import { db } from "../db/dbConfig";
 import axios from "axios";
 import Participant from "../models/Participant";
+import { initializeDatabase } from "../db/dbConfig";
+
+const dbPromise = initializeDatabase();
 
 const addParticipant = async (req: Request, res: Response) => {
     const participant: Participant = req.body;
 
     const user = await getUser(participant.idUser);
-    const event = await getEvent(participant.idEvento);
+    const event = await getEvent(participant.idEvent);
 
     if (!user || !event) {
         return res.send("participant not added");
     }
 
-    if (!(await validateAvailableSeats(participant.idEvento))) {
+    if (!(await validateAvailableSeats(participant.idEvent))) {
         return res.send("no seats available");
     }
 
@@ -23,9 +25,11 @@ const addParticipant = async (req: Request, res: Response) => {
 
     const sql = `INSERT INTO participants(idUser, idEvent) VALUES (:idUser, :idEvent);`;
 
+    const db = await dbPromise;
+
     await db.run(sql, {
         ":idUser": participant.idUser,
-        ":idEvent": participant.idEvento,
+        ":idEvent": participant.idEvent,
     });
 
     return res.status(201).send("participant added");
@@ -59,8 +63,10 @@ async function isParticipantInEvent(participant: Participant) {
         SELECT * FROM participants WHERE idEvent= :idEvent AND idUser= :idUser
         `;
 
+        const db = await dbPromise;
+
         const result = await db.get(sql, {
-            ":idEvent": participant.idEvento,
+            ":idEvent": participant.idEvent,
             ":idUser": participant.idUser,
         });
 
@@ -75,6 +81,8 @@ async function validateAvailableSeats(eventId: string) {
     try {
         const event = await getEvent(eventId);
         const seats = event.vagas;
+
+        const db = await dbPromise;
 
         const sql = `SELECT COUNT(*) as registered FROM participants WHERE idEvent = ?`;
         const result = await db.get(sql, [eventId]);
